@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking System</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .room {
+            margin: 15px 0;
+            padding: 15px;
+            background: #eef2ff;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            position: relative;
+        }
+
+        .room select,
+        .room input {
+            width: 90%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #999;
+            font-size: 16px;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .summary-box {
+            background: #eef2ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .summary-extra {
+            background: #bdccff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .navigation-list {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .navigation-list button {
+            padding: 12px 18px;
+            border: none;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .navigation-list button:hover {
+            background: #44ad47;
+        }
+
+        .navigation-list button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .checkbox-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .checkbox-wrapper input {
+            width: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Hotel Booking System</h2>
+
+        <!-- Booking -->
+        <div class="page" id="page1">
+            <div id="roomList">
+                <div class="room" data-room="1">
+                    <label>Select Room Type:</label>
+                    <select class="roomType">
+                        <option value="">Select</option>
+                        <option value="1000">Standard - ฿1,000</option>
+                        <option value="2000">Deluxe - ฿2,000</option>
+                        <option value="3000">Suite - ฿3,000</option>
+                    </select>
+                    <br>
+                    Extras:
+                    <div class="checkbox-container">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="extra" value="300" id="extra-breakfast-1">
+                            <label for="extra-breakfast-1">Breakfast (฿300)</label>
+                        </div>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="extra" value="500" id="extra-shuttle-1">
+                            <label for="extra-shuttle-1">Shuttle Service (฿500)</label>
+                        </div>
+                    </div>
+                    <button class="remove-btn hidden">X</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Summary -->
+        <div class="page hidden" id="page2">
+            <h3>Selected Rooms:</h3>
+            <div id="summaryList"></div>
+            <h3><strong>Total Price:</strong> ฿<span id="totalPrice">0</span></h3>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="navigation-list">
+            <button id="prevBtn" class="hidden">Previous</button>
+            <button id="addRoom">+ Add Another Room</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let roomCounter = 1;
+
+        function updateRemoveButtons() {
+            $('.remove-btn').toggle($('.room').length > 1);
+        }
+
+        function validatePage1() {
+            let isValid = true;
+            $('.roomType').each(function () {
+                if ($(this).val() === '') {
+                    isValid = false;
+                }
+            });
+            if (!isValid) {
+                alert('Please select a room type for all rooms before proceeding.');
+            }
+            return isValid;
+        }
+
+        $(document).ready(function () {
+            // Add Room
+            $('#addRoom').on('click', function () {
+                roomCounter++;
+                let newRoom = $('.room:first').clone();
+                newRoom.attr("data-room", roomCounter);
+                newRoom.find('select').val('');
+                newRoom.find('.extra').prop('checked', false);
+
+                // Update checkbox IDs and labels dynamically
+                newRoom.find('input[type="checkbox"]').each(function () {
+                    let newId = $(this).attr('id').split('-')[0] + '-' + roomCounter;
+                    $(this).attr('id', newId);
+                    $(this).next('label').attr('for', newId);
+                });
+
+                $('#roomList').append(newRoom);
+                updateRemoveButtons();
+            });
+
+            // Remove Room
+            $(document).on('click', '.remove-btn', function () {
+                if ($('.room').length > 1) {
+                    $(this).closest('.room').remove();
+                    updateRemoveButtons();
+                }
+            });
+            updateRemoveButtons();
+
+            // Navigation
+            $('#nextBtn').on('click', function () {
+                if (currentPage === 1 && !validatePage1()) return;
+
+                if (currentPage === 1) {
+                    let summaryHTML = "";
+                    let totalPrice = 0;
+
+                    $('.room').each(function (index) {
+                        let roomType = $(this).find('.roomType option:selected').text();
+                        let roomPrice = parseInt($(this).find('.roomType').val());
+                        let extras = $(this).find('.extra:checked');
+                        let extrasSummary = "";
+
+                        extras.each(function () {
+                            extrasSummary += `<div class="summary-extra">${($(this).next().text().split('('))[0]} - ฿${$(this).val()}</div>`;
+                            roomPrice += parseInt($(this).val());
+                        });
+
+                        summaryHTML += `<div class="summary-box">
+                            <strong>Room ${index + 1}: ${roomType}</strong>
+                            ${extrasSummary}
+                        </div>`;
+
+                        totalPrice += roomPrice;
+                    });
+
+                    $('#summaryList').html(summaryHTML);
+                    $('#totalPrice').text(totalPrice.toLocaleString());
+
+                    $('#page1').addClass('hidden');
+                    $('#page2').removeClass('hidden');
+                    $('#nextBtn').text('Confirm');
+                    $('#prevBtn').removeClass('hidden');
+                    $('#addRoom').addClass('hidden');
+                } else {
+                    alert('Booking Confirmed!');
+                }
+                currentPage = 2;
+            });
+
+            $('#prevBtn').on('click', function () {
+                if (currentPage === 2) {
+                    $('#page2').addClass('hidden');
+                    $('#page1').removeClass('hidden');
+                    $('#prevBtn').addClass('hidden');
+                    $('#nextBtn').text('Next');
+                    $('#addRoom').removeClass('hidden');
+                }
+                currentPage = 1;
+            });
+        });
+    </script>
+</body>
+
+</html>
